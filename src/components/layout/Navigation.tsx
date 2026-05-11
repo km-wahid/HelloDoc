@@ -6,17 +6,22 @@ import {
   Phone, 
   Bell, 
   UserCircle,
-  LogOut
+  LogOut,
+  Globe
 } from 'lucide-react';
-import { Screen } from '../../types';
+import { Screen, Language } from '../../types';
 
 interface HeaderProps {
   currentScreen: Screen;
   setScreen: (screen: Screen) => void;
   onLogout?: () => void;
+  language?: Language;
+  setLanguage?: (lang: Language) => void;
+  userName?: string;
+  userEmail?: string;
 }
 
-export function Header({ currentScreen, setScreen, onLogout }: HeaderProps) {
+export function Header({ currentScreen, setScreen, onLogout, language, setLanguage, userName, userEmail }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-16 h-20 bg-surface/80 backdrop-blur-md border-b border-outline transition-all duration-300">
       <div className="flex items-center gap-12">
@@ -34,9 +39,9 @@ export function Header({ currentScreen, setScreen, onLogout }: HeaderProps) {
         
         <nav className="hidden md:flex gap-1">
           {[
-            { id: 'dashboard', label: 'Overview' },
-            { id: 'assessment', label: 'Assessment' },
-            { id: 'search', label: 'Consultants' },
+            { id: 'dashboard', label: language === 'BN' ? 'ওভারভিউ' : 'Overview' },
+            { id: 'assessment', label: language === 'BN' ? 'মূল্যায়ন' : 'Assessment' },
+            { id: 'search', label: language === 'BN' ? 'পরামর্শক' : 'Consultants' },
           ].map((item) => (
             <button 
               key={item.id}
@@ -54,10 +59,20 @@ export function Header({ currentScreen, setScreen, onLogout }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="hidden lg:flex items-center gap-2 bg-background px-3 py-1.5 rounded-full border border-outline">
-          <span className="text-xs font-bold text-on-surface">English</span>
+        <div className="hidden lg:flex items-center gap-3 bg-background px-4 py-2 rounded-full border border-outline shadow-sm">
+          <button 
+            onClick={() => setLanguage?.('EN')}
+            className={`text-xs font-black transition-all ${language === 'EN' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+          >
+            English
+          </button>
           <div className="w-px h-3 bg-outline" />
-          <span className="text-xs font-medium text-on-surface-variant">বাংলা</span>
+          <button 
+            onClick={() => setLanguage?.('BN')}
+            className={`text-xs font-black transition-all ${language === 'BN' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+          >
+            বাংলা
+          </button>
         </div>
         
         <div className="flex items-center gap-2">
@@ -76,11 +91,11 @@ export function Header({ currentScreen, setScreen, onLogout }: HeaderProps) {
             onClick={() => setScreen('settings')}
           >
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold leading-none group-hover:text-primary transition-colors">Sarah Jenkins</p>
-              <p className="text-[10px] text-on-surface-variant mt-0.5">ID: #440291</p>
+              <p className="text-xs font-bold leading-none group-hover:text-primary transition-colors">{userName || 'Member'}</p>
+              <p className="text-[10px] text-on-surface-variant mt-0.5 max-w-[120px] truncate">{userEmail || 'ID: #440291'}</p>
             </div>
-            <button className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs ring-2 ring-background shadow-md group-hover:scale-105 transition-all">
-              SJ
+            <button className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs ring-2 ring-background shadow-md group-hover:scale-105 transition-all uppercase">
+              {userName?.slice(0, 2) || 'SJ'}
             </button>
           </div>
         </div>

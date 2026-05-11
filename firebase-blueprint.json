@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access info",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "Verified clinical email" },
+        "name": { "type": "string", "description": "Full clinical name" },
+        "role": { "type": "string", "enum": ["patient", "doctor", "worker"], "description": "Role-based access group" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "createdAt", "updatedAt"]
+    },
+    "HealthAssessment": {
+      "title": "Health Assessment",
+      "description": "Comprehensive health profile and AI-generated report",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "data": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "age": { "type": "number" },
+            "gender": { "type": "string" },
+            "height": { "type": "number" },
+            "weight": { "type": "number" },
+            "bloodGroup": { "type": "string" },
+            "existingDiseases": { "type": "array", "items": { "type": "string" } },
+            "familyHistory": { "type": "array", "items": { "type": "string" } },
+            "allergies": { "type": "array", "items": { "type": "string" } },
+            "smokingStatus": { "type": "string" },
+            "sleepPattern": { "type": "string" },
+            "foodHabits": { "type": "string" },
+            "waterIntake": { "type": "number" },
+            "physicalActivity": { "type": "string" },
+            "stressLevel": { "type": "string" },
+            "medicationHistory": { "type": "string" },
+            "symptoms": { "type": "string" }
+          }
+        },
+        "report": {
+          "type": "object",
+          "properties": {
+            "healthScore": { "type": "number" },
+            "risks": { "type": "array", "items": { "type": "object" } },
+            "recommendations": { "type": "array", "items": { "type": "string" } },
+            "tests": { "type": "array", "items": { "type": "string" } },
+            "specialists": { "type": "array", "items": { "type": "string" } },
+            "lifestylePlan": { "type": "array", "items": { "type": "string" } },
+            "reasoning": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "status", "data", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Store user profile and role"
+    },
+    "assessments/{assessmentId}": {
+      "schema": "HealthAssessment",
+      "description": "Store health assessments and AI reports"
+    }
+  }
+}

@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings';
+export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant';
+
+export type Language = 'EN' | 'BN';
 
 export type UserRole = 'patient' | 'doctor' | 'worker';
 
@@ -50,4 +52,40 @@ export interface HealthAssessment {
   
   // Current State
   symptoms: string[];
+}
+
+export interface HealthReport {
+  healthScore: number;
+  risks: {
+    category: string;
+    level: 'Low' | 'Medium' | 'High';
+    description: string;
+    confidence: number;
+  }[];
+  recommendations: string[];
+  suggestedTests: string[];
+  suggestedSpecialists: string[];
+  lifestylePlan: string[];
+  medicalReasoning: string;
+}
+
+export interface StoredAssessment {
+  id: string;
+  userId: string;
+  status: 'pending' | 'completed';
+  data: HealthAssessment;
+  report?: HealthReport;
+  createdAt: any;
+}
+
+export interface PregnancyProgress {
+  week: number;
+  babyGrowth: string;
+  babySizeDesc: string; // e.g. "Size of a Grape"
+  guidance: string[];
+  nutrition: string[];
+  exercise: string[];
+  warnings: string[];
+  medicineReminders: string[];
+  vaccinationReminders: string[];
 }

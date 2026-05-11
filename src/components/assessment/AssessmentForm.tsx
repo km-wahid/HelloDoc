@@ -12,14 +12,15 @@ import {
   Cpu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { HealthAssessment } from '../../types';
+import { HealthAssessment, Language } from '../../types';
 
 interface AssessmentFormProps {
   onBack: () => void;
   onComplete: (data: HealthAssessment) => void;
+  language?: Language;
 }
 
-const STEPS = [
+const STEPS_EN = [
   { id: 'biometrics', label: 'Biometrics', icon: <Heart size={18} /> },
   { id: 'clinical', label: 'Clinical History', icon: <History size={18} /> },
   { id: 'lifestyle', label: 'Lifestyle', icon: <Moon size={18} /> },
@@ -27,7 +28,36 @@ const STEPS = [
   { id: 'symptoms', label: 'Current State', icon: <Accessibility size={18} /> }
 ];
 
-export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
+const STEPS_BN = [
+  { id: 'biometrics', label: 'বায়োমেট্রিক', icon: <Heart size={18} /> },
+  { id: 'clinical', label: 'ক্লিনিক্যাল হিস্ট্রি', icon: <History size={18} /> },
+  { id: 'lifestyle', label: 'জীবনযাপন', icon: <Moon size={18} /> },
+  { id: 'maternal', label: 'মাতৃত্ব/মaternal', icon: <ShieldCheck size={18} /> },
+  { id: 'symptoms', label: 'বর্তমান অবস্থা', icon: <Accessibility size={18} /> }
+];
+
+export function AssessmentForm({ onBack, onComplete, language = 'EN' }: AssessmentFormProps) {
+  const STEPS = language === 'BN' ? STEPS_BN : STEPS_EN;
+
+  const t = {
+    EN: {
+      title: "Health Diagnostics",
+      sub: "Provide precise clinical data for our AI to generate your personalized risk profile.",
+      next: "Continue",
+      prev: "Back",
+      exit: "Diagnostic Exit",
+      finish: "Quantify Risks"
+    },
+    BN: {
+      title: "স্বাস্থ্য নির্ণয়",
+      sub: "আপনার ব্যক্তিগত রিস্ক প্রোফাইল তৈরি করতে আমাদের AI-কে সঠিক ক্লিনিক্যাল তথ্য প্রদান করুন।",
+      next: "চালিয়ে যান",
+      prev: "পিছনে",
+      exit: "প্রস্থান",
+      finish: "ঝুঁকি পরিমাপ করুন"
+    }
+  }[language];
+
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<HealthAssessment>({
     name: '',
@@ -70,9 +100,9 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
     <div className="max-w-7xl mx-auto space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div className="space-y-2">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-on-surface">Health Diagnostics</h1>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-on-surface">{t.title}</h1>
           <p className="text-on-surface-variant text-lg font-medium max-w-xl">
-            Provide precise clinical data for our AI to generate your personalized risk profile.
+            {t.sub}
           </p>
         </div>
         <div className="flex bg-surface p-1 rounded-xl border border-outline shadow-sm gap-1">
@@ -188,9 +218,10 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
                       <div className="space-y-4">
                         <h4 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Existing Conditions</h4>
                         <div className="flex flex-wrap gap-2">
-                          {['Diabetes', 'Hypertension', 'Asthma', 'Thyroid'].map(dis => (
+                          {['Diabetes', 'Hypertension', 'Asthma', 'Thyroid', 'Liver', 'Kidney'].map(dis => (
                             <button 
                               key={dis}
+                              type="button"
                               onClick={() => {
                                 const newItems = formData.existingDiseases.includes(dis)
                                   ? formData.existingDiseases.filter(d => d !== dis)
@@ -219,11 +250,26 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
                         />
                       </div>
                     </div>
-                    <textarea 
-                      className="w-full min-h-[160px] p-6 rounded-2xl bg-background border border-outline focus:border-primary outline-none transition-all font-medium text-base leading-relaxed"
-                      placeholder="Detail any family disease history or known allergies..."
-                      onChange={(e) => setFormData({...formData, familyHistory: [e.target.value]})}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant ml-1">Family Disease History</label>
+                        <textarea 
+                          className="w-full min-h-[120px] p-6 rounded-2xl bg-background border border-outline focus:border-primary outline-none transition-all font-medium text-base leading-relaxed"
+                          placeholder="Detail any family disease history..."
+                          value={formData.familyHistory[0] || ''}
+                          onChange={(e) => setFormData({...formData, familyHistory: [e.target.value]})}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant ml-1">Allergies</label>
+                        <textarea 
+                          className="w-full min-h-[120px] p-6 rounded-2xl bg-background border border-outline focus:border-primary outline-none transition-all font-medium text-base leading-relaxed"
+                          placeholder="Detail any known allergies..."
+                          value={formData.allergies[0] || ''}
+                          onChange={(e) => setFormData({...formData, allergies: [e.target.value]})}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -355,9 +401,18 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
                         </div>
                       </div>
                       <div className="md:w-72 space-y-2">
-                        {['Head/Neural', 'Cardiothoracic', 'Gastrointestinal', 'Maternal Discomfort'].map(area => (
+                        {[
+                          'Head/Neural (Headache, Dizziness)',
+                          'Cardiothoracic (Chest Pain, Cough)',
+                          'Gastrointestinal (Acid Reflux, Pain)',
+                          'Musculoskeletal (Joint/Muscle Pain)',
+                          'Maternal Discomfort',
+                          'Skin/Dermatological',
+                          'Respiratory (Shortness of Breath)'
+                        ].map(area => (
                           <button 
                             key={area}
+                            type="button"
                             onClick={() => {
                               const newSymp = formData.symptoms.includes(area)
                                 ? formData.symptoms.filter(s => s !== area)
@@ -370,7 +425,7 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
                                 : 'border-outline text-on-surface-variant hover:border-primary hover:text-primary hover:bg-primary/5'
                             }`}
                           >
-                            <span>{area}</span>
+                            <span>{area.split(' (')[0]}</span>
                             <ArrowRight size={14} className={formData.symptoms.includes(area) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} />
                           </button>
                         ))}
@@ -386,13 +441,13 @@ export function AssessmentForm({ onBack, onComplete }: AssessmentFormProps) {
                   className="px-8 py-4 rounded-2xl bg-background text-on-surface font-black text-sm hover:bg-outline/50 transition-all flex items-center gap-2 group shadow-sm active:scale-95"
                 >
                   <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                  {currentStep === 0 ? 'Diagnostic Exit' : 'Back'}
+                  {currentStep === 0 ? t.exit : t.prev}
                 </button>
                 <button 
                   onClick={nextStep}
                   className="px-10 py-4 rounded-2xl bg-primary text-white font-black text-base hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center gap-3 group"
                 >
-                  {currentStep === STEPS.length - 1 ? 'Quantify Risks' : 'Continue'}
+                  {currentStep === STEPS.length - 1 ? t.finish : t.next}
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

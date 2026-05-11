@@ -15,31 +15,90 @@ import {
   Save,
   RefreshCcw,
   CheckCircle2,
-  Clock
+  Clock,
+  ArrowRight,
+  Baby,
+  Bot
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { UserRole } from '../../types';
+import { UserRole, Language, StoredAssessment } from '../../types';
 
 interface DashboardProps {
   onStartAssessment: () => void;
+  onViewLatestAssessment: () => void;
+  onViewAssistant: () => void;
+  onViewMaternal: () => void;
   onBookConsult: () => void;
   onStartConsultation: () => void;
   userRole: UserRole;
   isWorkerMode: boolean;
   setIsWorkerMode: (val: boolean) => void;
   isOnline: boolean;
+  language?: Language;
+  latestAssessment?: StoredAssessment | null;
 }
 
 export function Dashboard({ 
   onStartAssessment, 
+  onViewLatestAssessment,
+  onViewAssistant,
+  onViewMaternal,
   onBookConsult, 
   onStartConsultation,
   userRole,
   isWorkerMode,
   setIsWorkerMode,
-  isOnline
+  isOnline,
+  language = 'EN',
+  latestAssessment
 }: DashboardProps) {
   const isDoctor = userRole === 'doctor';
+  const isPregnant = latestAssessment?.data.isPregnant;
+
+  const t = {
+    EN: {
+      patientWelcome: "Welcome back, Sarah",
+      doctorWelcome: "Clinical Cockpit • Dr. Sarah Rahman",
+      workerWelcome: "Village Assistant: Char Fasson",
+      patientSub: "Tuesday, May 14 • Your stats are stable",
+      workerSub: "District: Bhola • Tracking 42 Families",
+      startCheckup: "Start Checkup",
+      logPatient: "Log Patient Data",
+      workerMode: "Worker Assistant",
+      personalMode: "Personal Mode",
+      statusStable: "Stable",
+      heartRate: "Heart Rate",
+      sleepScore: "Sleep Score",
+      hydration: "Hydration",
+      upcomingApps: "Upcoming Appointments",
+      viewSchedule: "View Schedule",
+      labResults: "Recent Lab Results",
+      aiSummary: "AI Health Summary",
+      doctorSch: "Schedule Surgery",
+      doctorOnline: "Go Online"
+    },
+    BN: {
+      patientWelcome: "স্বাগতম, সারাহ",
+      doctorWelcome: "ক্লিনিক্যাল ককপিট • ডাঃ সারাহ রহমান",
+      workerWelcome: "ভিলেজ অ্যাসিস্ট্যান্ট: চর ফ্যাশন",
+      patientSub: "মঙ্গলবার, ১৪ মে • আপনার অবস্থা স্থিতিশীল",
+      workerSub: "জেলা: ভোলা • ৪২টি পরিবারের ট্র্যাকিং",
+      startCheckup: "চেকআপ শুরু করুন",
+      logPatient: "রোগীর তথ্য লগ করুন",
+      workerMode: "কর্মী সহকারী",
+      personalMode: "ব্যক্তিগত মোড",
+      statusStable: "স্থিতিশীল",
+      heartRate: "হৃদস্পন্দন",
+      sleepScore: "ঘুমের স্কোর",
+      hydration: "হাইড্রেশন",
+      upcomingApps: "আসন্ন অ্যাপয়েন্টমেন্ট",
+      viewSchedule: "সূচী দেখুন",
+      labResults: "সাম্প্রতিক ল্যাব রিপোর্ট",
+      aiSummary: "AI স্বাস্থ্য সারাংশ",
+      doctorSch: "সার্জারি সূচী",
+      doctorOnline: "অনলাইনে যান"
+    }
+  }[language];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,19 +124,19 @@ export function Dashboard({
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl md:text-4xl text-on-surface font-black tracking-tighter">
-              Clinical Cockpit • Dr. Sarah Rahman
+              {t.doctorWelcome}
             </h1>
             <p className="text-on-surface-variant font-bold flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-              Nexus Health Network • Dhaka Central Hospital
+              Nexus Health Network • {language === 'BN' ? 'ঢাকা সেন্ট্রাল হাসপাতাল' : 'Dhaka Central Hospital'}
             </p>
           </div>
           <div className="flex gap-3">
             <button className="px-5 py-2.5 bg-surface border border-outline text-on-surface rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-outline/10 active:scale-95 transition-all">
-              Schedule Surgery
+              {t.doctorSch}
             </button>
             <button className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-              Go Online
+              {t.doctorOnline}
             </button>
           </div>
         </header>
@@ -164,10 +223,10 @@ export function Dashboard({
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl text-on-surface font-bold tracking-tighter">
-            {isWorkerMode ? 'Village Assistant: Char Fasson' : 'Welcome back, Sarah'}
+            {isWorkerMode ? t.workerWelcome : t.patientWelcome}
           </h1>
           <p className="text-on-surface-variant font-medium mt-1">
-            {isWorkerMode ? 'District: Bhola • Tracking 42 Families' : 'Tuesday, May 14 • Your stats are stable'}
+            {isWorkerMode ? t.workerSub : t.patientSub}
           </p>
         </div>
         <div className="flex gap-3">
@@ -179,13 +238,13 @@ export function Dashboard({
                 : 'bg-surface border-outline text-on-surface hover:bg-outline/10'
             }`}
           >
-            {isWorkerMode ? 'Personal Mode' : 'Worker Assistant'}
+            {isWorkerMode ? t.personalMode : t.workerMode}
           </button>
           <button 
             onClick={onStartAssessment}
             className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition-all"
           >
-            {isWorkerMode ? 'Log Patient Data' : 'Start Checkup'}
+            {isWorkerMode ? t.logPatient : t.startCheckup}
           </button>
         </div>
       </header>
@@ -209,9 +268,9 @@ export function Dashboard({
           <div className="flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
             <span className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              Heart Rate
+              {t.heartRate}
             </span>
-            <span className="px-2 py-0.5 bg-secondary-container text-secondary rounded-md">Stable</span>
+            <span className="px-2 py-0.5 bg-secondary-container text-secondary rounded-md">{t.statusStable}</span>
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-light text-on-surface">72</span>
@@ -233,7 +292,7 @@ export function Dashboard({
           <div className="flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
             <span className="flex items-center gap-2">
               <Moon size={14} className="text-primary" />
-              Sleep Score
+              {t.sleepScore}
             </span>
             <span className="px-2 py-0.5 bg-secondary-container text-secondary rounded-md">+12%</span>
           </div>
@@ -251,9 +310,9 @@ export function Dashboard({
           <div className="flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
             <span className="flex items-center gap-2">
               <Activity size={14} className="text-tertiary" />
-              Hydration
+              {t.hydration}
             </span>
-            <span className="px-2 py-0.5 bg-error-container text-error rounded-md">Low</span>
+            <span className="px-2 py-0.5 bg-error-container text-error rounded-md">{language === 'BN' ? 'কম' : 'Low'}</span>
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-light text-on-surface">1.2</span>
@@ -267,8 +326,8 @@ export function Dashboard({
         {/* Appointments Section */}
         <motion.section variants={itemVariants} className="card col-span-1 md:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold">Upcoming Appointments</h3>
-            <button className="text-xs font-bold text-primary hover:underline">View Schedule</button>
+            <h3 className="text-lg font-bold">{t.upcomingApps}</h3>
+            <button className="text-xs font-bold text-primary hover:underline">{t.viewSchedule}</button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <AppointmentItem 
@@ -292,44 +351,99 @@ export function Dashboard({
 
         {/* Recent Lab Results */}
         <motion.section variants={itemVariants} className="card space-y-6">
-          <h3 className="text-lg font-bold">Recent Lab Results</h3>
+          <h3 className="text-lg font-bold">{t.labResults}</h3>
           <div className="space-y-1">
-            <ResultRow name="Complete Blood Count" status="Normal" />
-            <ResultRow name="Lipid Panel" status="Normal" />
-            <ResultRow name="Thyroid (TSH)" status="Pending" isPending />
-            <ResultRow name="Vitamin D" status="Optimal" />
+            <ResultRow name={language === 'BN' ? 'কমপ্লিট ব্লাড কাউন্ট' : 'Complete Blood Count'} status={language === 'BN' ? 'স্বাভাবিক' : 'Normal'} />
+            <ResultRow name={language === 'BN' ? 'লিপিড প্যানেল' : 'Lipid Panel'} status={language === 'BN' ? 'স্বাভাবিক' : 'Normal'} />
+            <ResultRow name={language === 'BN' ? 'থাইরয়েড (TSH)' : 'Thyroid (TSH)'} status={language === 'BN' ? 'অপেক্ষমান' : 'Pending'} isPending />
+            <ResultRow name={language === 'BN' ? 'ভিটামিন ডি' : 'Vitamin D'} status={language === 'BN' ? 'অনুকূল' : 'Optimal'} />
           </div>
         </motion.section>
 
-        {/* AI Health Summary */}
-        <motion.section variants={itemVariants} className="card col-span-1 md:col-span-3 bg-primary text-white border-none shadow-xl overflow-hidden relative">
-          <div className="relative z-10 space-y-6">
-            <div className="flex justify-between items-start">
+        {isPregnant && (
+          <motion.section 
+            variants={itemVariants} 
+            className="card bg-secondary text-white border-none shadow-xl overflow-hidden relative group cursor-pointer"
+            onClick={onViewMaternal}
+          >
+            <div className="relative z-10 space-y-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                 <Baby size={24} className="text-white" />
+              </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold">AI Health Summary</h3>
-                <p className="text-white/70 text-xs font-medium">Synthesized from your last 3 checkups</p>
+                 <h3 className="text-xl font-bold tracking-tight">Maternal Companion</h3>
+                 <p className="text-white/60 text-xs font-medium">Tracking Week {latestAssessment?.data.pregnancyWeeks}</p>
               </div>
-              <Zap size={32} className="text-white fill-white/20" />
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest pt-4">
+                 Open Insights
+                 <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Consistency</span>
-                <p className="text-sm font-medium leading-relaxed">Your hydration has improved by <span className="text-white font-black underline decoration-2 underline-offset-4">15%</span> this week. Keep hitting your 2L goal.</p>
-              </div>
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Insight</span>
-                <p className="text-sm font-medium leading-relaxed">Lower stress levels detected between 7 AM - 9 AM. Early morning meditation is working.</p>
-              </div>
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Priority</span>
-                <p className="text-sm font-medium leading-relaxed">Blood pressure slightly elevated in evenings. Reduce sodium intake after 6 PM.</p>
-              </div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute top-10 right-20 w-20 h-20 bg-white/5 rounded-full blur-2xl" />
+          </motion.section>
+        )}
+
+        {/* Global AI Assistant Action */}
+        <motion.section 
+          variants={itemVariants} 
+          className="card bg-on-surface text-white border-none shadow-xl overflow-hidden relative group cursor-pointer"
+          onClick={onViewAssistant}
+        >
+          <div className="relative z-10 space-y-4">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
+               <Bot size={24} className="text-white" />
+            </div>
+            <div className="space-y-1">
+               <h3 className="text-xl font-bold tracking-tight">{language === 'BN' ? 'AI স্বাস্থ্য সহকারী' : 'Clinical AI Assistant'}</h3>
+               <p className="text-white/60 text-xs font-medium">{language === 'BN' ? 'স্বাস্হ্য নিয়ে সরাসরি চ্যাট করুন' : 'Direct clinical chat support'}</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest pt-4 text-primary">
+               Start Chat
+               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute top-10 right-20 w-20 h-20 bg-white/5 rounded-full blur-2xl" />
+          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
         </motion.section>
+
+      {/* AI Health Summary */}
+      <motion.section variants={itemVariants} className="card col-span-1 md:col-span-3 bg-on-surface text-white border-none shadow-xl overflow-hidden relative">
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          <div className="md:col-span-8 flex items-center gap-6">
+            <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center shadow-xl shadow-primary/20 shrink-0">
+              <Zap size={32} className="text-white fill-white/20" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-2xl font-bold tracking-tight">AI Health Portrait</h3>
+              <p className="text-white/40 text-sm font-medium">
+                {latestAssessment 
+                  ? `Last analyzed on ${latestAssessment.createdAt?.toDate ? latestAssessment.createdAt.toDate().toLocaleDateString() : 'recently'}` 
+                  : 'Diagnostic analysis pending synchronization'}
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-4 flex gap-3">
+             {latestAssessment ? (
+               <button 
+                 onClick={onViewLatestAssessment}
+                 className="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
+               >
+                 View Comprehensive Report
+                 <ChevronRight size={18} />
+               </button>
+             ) : (
+               <button 
+                 onClick={onStartAssessment}
+                 className="w-full py-4 bg-white/10 text-white rounded-2xl font-black text-sm border border-white/10 hover:bg-white/20 transition-all flex items-center justify-center gap-3"
+               >
+                 Run New Diagnostic
+                 <ArrowRight size={18} />
+               </button>
+             )}
+          </div>
+        </div>
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+      </motion.section>
       </div>
     </motion.div>
   );

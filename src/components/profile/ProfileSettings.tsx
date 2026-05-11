@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
@@ -8,36 +8,77 @@ import {
   ShieldCheck, 
   Save, 
   Camera,
-  LogOut 
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
+import { auth, db } from '../../lib/firebase';
+import { handleFirestoreError, OperationType } from '../../lib/errorHandlers';
 
 interface ProfileSettingsProps {
   onBack: () => void;
   onLogout: () => void;
+  userProfile: {
+    name: string;
+    email: string;
+    uid: string;
+  };
 }
 
-export function ProfileSettings({ onBack, onLogout }: ProfileSettingsProps) {
+export function ProfileSettings({ onBack, onLogout, userProfile }: ProfileSettingsProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
-    name: 'Sarah Jenkins',
-    email: 'sarah.j@example.com',
-    phone: '+880 1712-345678',
+    name: userProfile.name,
+    email: userProfile.email,
+    phone: '',
     password: '••••••••',
     newPassword: '',
     confirmPassword: ''
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      name: userProfile.name,
+      email: userProfile.email
+    }));
+  }, [userProfile]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+    setSaveStatus('idle');
+    
+    try {
+      if (!userProfile.uid) throw new Error('Identity not verified.');
+      
+      // Update Firestore
+      try {
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          name: formData.name,
+          updatedAt: serverTimestamp()
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${userProfile.uid}`);
+      }
+
+      // Update Auth Profile
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: formData.name });
+      }
+
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 1500);
+    } catch (err: any) {
+      setSaveStatus('error');
+      setErrorMessage(err.message || 'Synchronization failed.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -66,16 +107,16 @@ export function ProfileSettings({ onBack, onLogout }: ProfileSettingsProps) {
         <div className="lg:col-span-1 space-y-8">
           <div className="card bg-surface border-outline p-8 flex flex-col items-center text-center">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-4xl font-black shadow-2xl relative overflow-hidden ring-4 ring-background">
-                SJ
+              <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-4xl font-black shadow-2xl relative overflow-hidden ring-4 ring-background uppercase">
+                {formData.name.slice(0, 2)}
               </div>
               <button className="absolute bottom-0 right-0 w-10 h-10 bg-on-surface text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-primary transition-all group-hover:scale-110 active:scale-95">
                 <Camera size={18} />
               </button>
             </div>
             <div className="mt-6 space-y-1">
-              <h3 className="text-lg font-bold">Sarah Jenkins</h3>
-              <p className="text-xs font-medium text-on-surface-variant">Member since Jan 2024</p>
+              <h3 className="text-lg font-bold">{formData.name}</h3>
+              <p className="text-xs font-medium text-on-surface-variant">Authenticated Node Activity</p>
             </div>
           </div>
 
@@ -188,18 +229,25 @@ export function ProfileSettings({ onBack, onLogout }: ProfileSettingsProps) {
               </div>
             </div>
 
-            <div className="pt-6">
+            <div className="pt-6 space-y-4">
+              {saveStatus === 'error' && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500">
+                  <span className="text-[10px] font-black uppercase tracking-widest">{errorMessage}</span>
+                </div>
+              )}
               <button 
                 type="submit"
                 disabled={isSaving}
                 className={`w-full h-16 rounded-[1.25rem] font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all shadow-xl ${
                   saveStatus === 'success' 
                     ? 'bg-secondary text-white shadow-secondary/20' 
+                    : saveStatus === 'error'
+                    ? 'bg-red-500 text-white'
                     : 'bg-primary text-white shadow-primary/20 hover:scale-[1.01] active:scale-[0.98]'
                 }`}
               >
                 {isSaving ? (
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : saveStatus === 'success' ? (
                   <>
                     <ShieldCheck size={20} />
