@@ -36,6 +36,19 @@ export function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [recoverySent, setRecoverySent] = useState(false);
 
+  const handleDirectDemoLogin = async (role: 'patient' | 'doctor') => {
+    setError(null);
+    setIsAuthenticating(true);
+    try {
+      const profile = await authService.loginWithDemo(role);
+      onLogin(profile.role);
+    } catch (err: any) {
+      setError(err.message || 'Direct demo login failed.');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   const handleAction = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -155,11 +168,32 @@ export function Login({ onLogin }: LoginProps) {
              </button>
 
              <div className="flex items-center gap-4 px-2">
-               <div className="h-px flex-grow bg-white/5" />
-               <span className="text-[10px] font-black text-white/10 uppercase tracking-widest">or Clinical ID</span>
-               <div className="h-px flex-grow bg-white/5" />
-             </div>
-          </div>
+                <div className="h-px flex-grow bg-white/5" />
+                <span className="text-[10px] font-black text-white/10 uppercase tracking-widest">or Clinical ID</span>
+                <div className="h-px flex-grow bg-white/5" />
+              </div>
+
+              {mode === 'login' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleDirectDemoLogin('patient')}
+                    disabled={isAuthenticating}
+                    className="h-12 rounded-2xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                  >
+                    Direct Patient Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDirectDemoLogin('doctor')}
+                    disabled={isAuthenticating}
+                    className="h-12 rounded-2xl bg-secondary/10 border border-secondary/30 text-secondary hover:bg-secondary/20 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                  >
+                    Direct Doctor Login
+                  </button>
+                </div>
+              )}
+           </div>
 
           <AnimatePresence mode="wait">
             {(mode === 'login' || mode === 'register') && (

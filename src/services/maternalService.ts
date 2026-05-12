@@ -1,7 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { PregnancyProgress } from '../types';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { bedrockApiService } from './bedrockApiService';
 
 export const maternalService = {
   async getWeeklyInsights(week: number, language: 'EN' | 'BN' = 'EN'): Promise<PregnancyProgress> {
@@ -22,30 +20,11 @@ export const maternalService = {
     }`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              week: { type: Type.NUMBER },
-              babyGrowth: { type: Type.STRING },
-              babySizeDesc: { type: Type.STRING },
-              guidance: { type: Type.ARRAY, items: { type: Type.STRING } },
-              nutrition: { type: Type.ARRAY, items: { type: Type.STRING } },
-              exercise: { type: Type.ARRAY, items: { type: Type.STRING } },
-              warnings: { type: Type.ARRAY, items: { type: Type.STRING } },
-              medicineReminders: { type: Type.ARRAY, items: { type: Type.STRING } },
-              vaccinationReminders: { type: Type.ARRAY, items: { type: Type.STRING } }
-            },
-            required: ["week", "babyGrowth", "babySizeDesc", "guidance", "nutrition", "exercise", "warnings", "medicineReminders", "vaccinationReminders"]
-          }
-        }
+      const response = await bedrockApiService.completeJson<PregnancyProgress>({
+        systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
       });
-
-      return JSON.parse(response.text) as PregnancyProgress;
+      return response;
     } catch (error) {
       console.error("Maternal Insights Failure:", error);
       // Fallback data
@@ -77,11 +56,10 @@ export const maternalService = {
     3. Keep responses concise and formatted for mobile view.`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt
+      const response = await bedrockApiService.completeText({
+        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
       });
-      return response.text;
+      return response;
     } catch (error) {
       return "I'm having trouble connecting to my clinical database. If you feel any discomfort, please see a doctor immediately.";
     }

@@ -15,12 +15,11 @@ import { AIChat } from './components/assistant/AIChat';
 import { DoctorSearch } from './components/search/DoctorSearch';
 import { DoctorProfile } from './components/search/DoctorProfile';
 import { Consultation } from './components/consultation/Consultation';
+import { Records } from './components/records/Records';
 import { ProfileSettings } from './components/profile/ProfileSettings';
 import { Login } from './components/profile/Login';
 import { AnimatePresence, motion } from 'motion/react';
 import { Wifi, WifiOff, RefreshCcw, UserPlus, Globe, Loader2, BrainCircuit } from 'lucide-react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './lib/firebase';
 import { authService } from './services/authService';
 import { assessmentService } from './services/assessmentService';
 import { StoredAssessment } from './types';
@@ -33,16 +32,18 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [latestAssessment, setLatestAssessment] = useState<StoredAssessment | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ uid: string; name: string; email: string } | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isWorkerMode, setIsWorkerMode] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = authService.onAuthStateChanged(async (user) => {
       if (user) {
         try {
+          setCurrentUser({ uid: user.uid, name: user.name, email: user.email });
           const profile = await authService.getProfile(user.uid);
-          if (profile) {
+          if (profile?.role) {
             setUserRole(profile.role);
             setIsAuthenticated(true);
             
@@ -63,6 +64,8 @@ export default function App() {
       } else {
         setIsAuthenticated(false);
         setUserRole(null);
+        setCurrentUser(null);
+        setLatestAssessment(null);
         setCurrentScreen('login');
       }
       setIsLoading(false);
@@ -176,8 +179,8 @@ export default function App() {
           onLogout={handleLogout} 
           language={language}
           setLanguage={setLanguage}
-          userName={auth.currentUser?.displayName || undefined}
-          userEmail={auth.currentUser?.email || undefined}
+          userName={currentUser?.name || undefined}
+          userEmail={currentUser?.email || undefined}
         />
       )}
       
@@ -268,6 +271,10 @@ export default function App() {
                 <DoctorSearch onSelectDoctor={handleSelectDoctor} />
               )}
 
+              {currentScreen === 'history' && (
+                <Records />
+              )}
+
               {currentScreen === 'doctor-profile' && selectedDoctor && (
                 <DoctorProfile 
                   doctor={selectedDoctor} 
@@ -288,9 +295,9 @@ export default function App() {
                   onBack={() => navigate('dashboard')} 
                   onLogout={handleLogout} 
                   userProfile={{
-                    name: auth.currentUser?.displayName || 'User',
-                    email: auth.currentUser?.email || '',
-                    uid: auth.currentUser?.uid || ''
+                    name: currentUser?.name || 'User',
+                    email: currentUser?.email || '',
+                    uid: currentUser?.uid || ''
                   }}
                 />
               )}
@@ -352,4 +359,3 @@ export default function App() {
     </div>
   );
 }
-

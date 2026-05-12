@@ -42,6 +42,7 @@ export function Header({ currentScreen, setScreen, onLogout, language, setLangua
             { id: 'dashboard', label: language === 'BN' ? 'ওভারভিউ' : 'Overview' },
             { id: 'assessment', label: language === 'BN' ? 'মূল্যায়ন' : 'Assessment' },
             { id: 'search', label: language === 'BN' ? 'পরামর্শক' : 'Consultants' },
+            { id: 'history', label: language === 'BN' ? 'রেকর্ড' : 'Records' },
           ].map((item) => (
             <button 
               key={item.id}
@@ -120,7 +121,7 @@ export function BottomNav({ currentScreen, setScreen }: HeaderProps) {
         return (
           <button 
             key={tab.id}
-            onClick={() => tab.id !== 'history' && setScreen(tab.id as Screen)}
+            onClick={() => setScreen(tab.id as Screen)}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 ${
               isActive 
                 ? 'text-primary' 

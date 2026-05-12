@@ -12,10 +12,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
-import { auth, db } from '../../lib/firebase';
-import { handleFirestoreError, OperationType } from '../../lib/errorHandlers';
+import { authService } from '../../services/authService';
 
 interface ProfileSettingsProps {
   onBack: () => void;
@@ -55,21 +52,11 @@ export function ProfileSettings({ onBack, onLogout, userProfile }: ProfileSettin
     
     try {
       if (!userProfile.uid) throw new Error('Identity not verified.');
-      
-      // Update Firestore
-      try {
-        await updateDoc(doc(db, 'users', userProfile.uid), {
-          name: formData.name,
-          updatedAt: serverTimestamp()
-        });
-      } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, `users/${userProfile.uid}`);
-      }
 
-      // Update Auth Profile
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName: formData.name });
-      }
+      await authService.updateProfile(userProfile.uid, {
+        name: formData.name,
+        email: formData.email
+      });
 
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);

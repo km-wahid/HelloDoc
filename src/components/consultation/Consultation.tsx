@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Doctor } from '../../types';
 import React, { useState, useEffect } from 'react';
+import { recordService } from '../../services/recordService';
 
 interface ConsultationProps {
   doctor: Doctor;
@@ -39,7 +40,8 @@ export function Consultation({ doctor, onEnd }: ConsultationProps) {
   const [sidePanelTab, setSidePanelTab] = useState<'intelligence' | 'notes'>('intelligence');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ role: 'user' | 'doctor', text: string }[]>([]);
   const [aiInsights, setAiInsights] = useState<{ type: 'risk' | 'pattern' | 'suggestion', text: string, confidence: number }[]>([
     { type: 'pattern', text: 'Detected respiratory rhythmic variance', confidence: 92 },
@@ -81,14 +83,25 @@ export function Consultation({ doctor, onEnd }: ConsultationProps) {
     }, 1500);
   };
 
-  const handleSaveNotes = () => {
+  const handleSaveNotes = async () => {
+    if (!notes.trim()) return;
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+    setSaveError(null);
+    try {
+      await recordService.saveConsultationRecord({
+        doctorId: doctor.id,
+        doctorName: doctor.name,
+        notes: notes.trim(),
+      });
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 1200);
+    } catch (error) {
+      setSaveStatus('error');
+      setSaveError(error instanceof Error ? error.message : 'Failed to save patient record.');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -458,6 +471,11 @@ export function Consultation({ doctor, onEnd }: ConsultationProps) {
                         <Clock size={20} />
                       </button>
                     </div>
+                    {saveStatus === 'error' && saveError && (
+                      <div className="p-4 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs font-bold">
+                        {saveError}
+                      </div>
+                    )}
 
                     <div className="p-6 bg-secondary/5 rounded-2xl border border-secondary/20">
                       <p className="text-[10px] font-bold text-secondary/60 leading-relaxed">

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant';
+export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant' | 'history';
 
 export type Language = 'EN' | 'BN';
 
@@ -88,4 +88,13 @@ export interface PregnancyProgress {
   warnings: string[];
   medicineReminders: string[];
   vaccinationReminders: string[];
+}
+
+export interface ConsultationRecord {
+  id: string;
+  userId: string;
+  doctorId: string;
+  doctorName: string;
+  notes: string;
+  createdAt: string;
 }

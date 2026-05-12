@@ -1,5 +1,4 @@
-
-import { auth } from './firebase';
+import { authService } from '../services/authService';
 
 export enum OperationType {
   CREATE = 'create',
@@ -26,10 +25,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
+      userId: authService.getCurrentUser()?.uid,
+      email: authService.getCurrentUser()?.email,
+      emailVerified: null,
+      isAnonymous: null,
     },
     operationType,
     path

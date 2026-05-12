@@ -1,39 +1,45 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  doc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { GoogleGenAI, Type } from "@google/genai";
-import { db, auth } from '../lib/firebase';
 import { HealthAssessment, HealthReport, StoredAssessment } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/errorHandlers';
+import { authService } from './authService';
+import { bedrockApiService } from './bedrockApiService';
+const ASSESSMENTS_STORAGE_KEY = 'hellodoc_assessments';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+type StoredAssessmentRecord = StoredAssessment & {
+  updatedAt?: string;
+  createdAt: string;
+};
+
+const getStoredAssessments = (): StoredAssessmentRecord[] => {
+  const raw = localStorage.getItem(ASSESSMENTS_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as StoredAssessmentRecord[];
+  } catch {
+    return [];
+  }
+};
+
+const saveStoredAssessments = (assessments: StoredAssessmentRecord[]) => {
+  localStorage.setItem(ASSESSMENTS_STORAGE_KEY, JSON.stringify(assessments));
+};
+
+const createId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `assessment-${Date.now()}`);
 
 export const assessmentService = {
   async saveAssessment(data: HealthAssessment): Promise<string> {
-    const userId = auth.currentUser?.uid;
+    const userId = authService.getCurrentUser()?.uid;
     if (!userId) throw new Error('Unauthenticated activity detected.');
 
-    try {
-      const docRef = await addDoc(collection(db, 'assessments'), {
-        userId,
-        status: 'pending',
-        data,
-        createdAt: serverTimestamp()
-      });
-      return docRef.id;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'assessments');
-      throw error;
-    }
+    const id = createId();
+    const assessments = getStoredAssessments();
+    assessments.push({
+      id,
+      userId,
+      status: 'pending',
+      data,
+      createdAt: new Date().toISOString(),
+    });
+    saveStoredAssessments(assessments);
+    return id;
   },
 
   async generateAIReport(data: HealthAssessment): Promise<HealthReport> {
@@ -63,40 +69,10 @@ export const assessmentService = {
     }`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              healthScore: { type: Type.NUMBER },
-              risks: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    category: { type: Type.STRING },
-                    level: { type: Type.STRING, enum: ["Low", "Medium", "High"] },
-                    description: { type: Type.STRING },
-                    confidence: { type: Type.NUMBER }
-                  },
-                  required: ["category", "level", "description", "confidence"]
-                }
-              },
-              recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
-              suggestedTests: { type: Type.ARRAY, items: { type: Type.STRING } },
-              suggestedSpecialists: { type: Type.ARRAY, items: { type: Type.STRING } },
-              lifestylePlan: { type: Type.ARRAY, items: { type: Type.STRING } },
-              medicalReasoning: { type: Type.STRING }
-            },
-            required: ["healthScore", "risks", "recommendations", "suggestedTests", "suggestedSpecialists", "lifestylePlan", "medicalReasoning"]
-          }
-        }
+      const report = await bedrockApiService.completeJson<HealthReport>({
+        systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
       });
-
-      const report = JSON.parse(response.text);
       return report as HealthReport;
     } catch (error) {
       console.error("AI Analysis Engine Failure:", error);
@@ -105,39 +81,27 @@ export const assessmentService = {
   },
 
   async updateAssessmentWithReport(id: string, report: HealthReport): Promise<void> {
-    try {
-      await updateDoc(doc(db, 'assessments', id), {
-        report,
-        status: 'completed',
-        updatedAt: serverTimestamp()
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `assessments/${id}`);
-      throw error;
+    const assessments = getStoredAssessments();
+    const index = assessments.findIndex((assessment) => assessment.id === id);
+    if (index === -1) {
+      throw new Error('Assessment not found.');
     }
+    assessments[index] = {
+      ...assessments[index],
+      report,
+      status: 'completed',
+      updatedAt: new Date().toISOString()
+    };
+    saveStoredAssessments(assessments);
   },
 
   async getLatestAssessment(): Promise<StoredAssessment | null> {
-    const userId = auth.currentUser?.uid;
+    const userId = authService.getCurrentUser()?.uid;
     if (!userId) return null;
 
-    try {
-      const q = query(
-        collection(db, 'assessments'),
-        where('userId', '==', userId),
-        where('status', '==', 'completed'),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) return null;
-      
-      const docData = querySnapshot.docs[0];
-      return { id: docData.id, ...docData.data() } as StoredAssessment;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'assessments');
-      return null;
-    }
+    const latest = getStoredAssessments()
+      .filter((assessment) => assessment.userId === userId && assessment.status === 'completed')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    return latest ?? null;
   }
 };

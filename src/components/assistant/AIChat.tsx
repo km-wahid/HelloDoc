@@ -51,8 +51,11 @@ export function AIChat({ onBack, language, latestAssessment }: AIChatProps) {
       const response = await aiService.chat(userMessage, messages, language, latestAssessment);
       const modelMessage: ChatMessage = { role: 'model', parts: [{ text: response }] };
       setMessages(prev => [...prev, modelMessage]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
+      const fallbackText = error instanceof Error ? error.message : 'AI request failed. Please try again.';
+      const modelMessage: ChatMessage = { role: 'model', parts: [{ text: fallbackText }] };
+      setMessages(prev => [...prev, modelMessage]);
     } finally {
       setIsLoading(false);
     }
