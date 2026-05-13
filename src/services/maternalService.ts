@@ -1,5 +1,19 @@
 import { PregnancyProgress } from '../types';
-import { bedrockApiService } from './bedrockApiService';
+import { aiRouter } from '../ai/aiProvider';
+
+const extractJson = <T>(text: string): T => {
+  const cleaned = text.trim();
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      return JSON.parse(cleaned.slice(start, end + 1)) as T;
+    }
+    throw new Error('Model did not return valid JSON.');
+  }
+};
 
 export const maternalService = {
   async getWeeklyInsights(week: number, language: 'EN' | 'BN' = 'EN'): Promise<PregnancyProgress> {
@@ -20,11 +34,14 @@ export const maternalService = {
     }`;
 
     try {
-      const response = await bedrockApiService.completeJson<PregnancyProgress>({
-        systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
-        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
-      });
-      return response;
+      const response = await aiRouter.chat(
+        [{ role: 'user', content: prompt }],
+        {
+          systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+          maxTokens: 1500,
+        }
+      );
+      return extractJson<PregnancyProgress>(response.text);
     } catch (error) {
       console.error("Maternal Insights Failure:", error);
       // Fallback data
@@ -56,10 +73,11 @@ export const maternalService = {
     3. Keep responses concise and formatted for mobile view.`;
 
     try {
-      const response = await bedrockApiService.completeText({
-        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
-      });
-      return response;
+      const response = await aiRouter.chat(
+        [{ role: 'user', content: prompt }],
+        { maxTokens: 800 }
+      );
+      return response.text;
     } catch (error) {
       return "I'm having trouble connecting to my clinical database. If you feel any discomfort, please see a doctor immediately.";
     }

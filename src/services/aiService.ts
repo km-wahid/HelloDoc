@@ -1,11 +1,19 @@
 import { StoredAssessment, Language } from '../types';
-import { bedrockApiService } from './bedrockApiService';
+import { aiRouter } from '../ai/aiProvider';
 
 export const aiService = {
   async chat(message: string, history: { role: 'user' | 'model', parts: { text: string }[] }[], language: Language, latestAssessment?: StoredAssessment | null) {
     try {
-      const response = await bedrockApiService.completeText({
-        systemPrompt: `You are a helpful and professional Medical AI Assistant.
+      const response = await aiRouter.chat(
+        [
+          ...history.map((item) => ({
+            role: item.role === 'model' ? 'assistant' as const : 'user' as const,
+            content: item.parts[0]?.text || '',
+          })),
+          { role: 'user', content: message },
+        ],
+        {
+          systemPrompt: `You are a helpful and professional Medical AI Assistant.
 Your goal is to provide accurate, empathetic, and clinical-grade information for users in Bangladesh.
 
 User Profile Context:
@@ -19,16 +27,12 @@ Guidelines:
 3. Use the user's health profile (if provided) to personalize recommendations.
 4. Keep responses structured and easy to read on mobile.
 5. Support both English and Bengali seamlessly.`,
-        messages: [
-          ...history.map((item) => ({
-            role: item.role === 'model' ? 'assistant' as const : 'user' as const,
-            content: [{ type: 'text' as const, text: item.parts[0]?.text || '' }],
-          })),
-          { role: 'user', content: [{ type: 'text', text: message }] },
-        ],
-      });
+          maxTokens: 1400,
+          temperature: 0.2,
+        }
+      );
 
-      return response;
+      return response.text;
     } catch (error) {
       console.error("AI Assistant Failure:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);

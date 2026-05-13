@@ -65,37 +65,45 @@ app.post('/api/ai/message', async (req, res) => {
         return res.status(500).json({ error: 'GEMINI_API_KEY is missing.' });
       }
 
-      const geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(geminiApiKey)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
-            contents: messages.map((message) => ({
-              role: message.role === 'assistant' ? 'model' : 'user',
-              parts: (Array.isArray(message.content) ? message.content : []).map((part) => ({ text: part?.text ?? '' })),
-            })),
-            generationConfig: {
-              maxOutputTokens: maxTokens,
-              temperature,
-            },
-          }),
-        },
-      );
+      try {
+        const geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(geminiApiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
+              contents: messages.map((message) => ({
+                role: message.role === 'assistant' ? 'model' : 'user',
+                parts: (Array.isArray(message.content) ? message.content : []).map((part) => ({ 
+                  text: typeof part === 'string' ? part : (part?.text ?? '') 
+                })),
+              })),
+              generationConfig: {
+                maxOutputTokens: maxTokens,
+                temperature,
+              },
+            }),
+          },
+        );
 
-      const geminiRaw = await geminiResponse.json();
-      if (!geminiResponse.ok) {
-        const err = geminiRaw?.error?.message || 'Gemini request failed.';
-        return res.status(geminiResponse.status).json({ error: err });
+        const geminiRaw = await geminiResponse.json();
+        if (!geminiResponse.ok) {
+          const err = geminiRaw?.error?.message || 'Gemini request failed.';
+          console.error('Gemini error:', err, geminiRaw?.error);
+          return res.status(geminiResponse.status).json({ error: err });
+        }
+
+        const text = parseGeminiText(geminiRaw);
+        if (!text) {
+          return res.status(502).json({ error: 'No text response from Gemini model' });
+        }
+
+        return res.json({ text });
+      } catch (err) {
+        console.error('Gemini API error:', err.message);
+        return res.status(500).json({ error: err.message || 'Gemini API error' });
       }
-
-      const text = parseGeminiText(geminiRaw);
-      if (!text) {
-        return res.status(502).json({ error: 'No text response from Gemini model' });
-      }
-
-      return res.json({ text });
     }
 
     const command = new InvokeModelCommand({

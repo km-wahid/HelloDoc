@@ -1,6 +1,7 @@
 import { HealthAssessment, HealthReport, StoredAssessment } from '../types';
 import { authService } from './authService';
-import { bedrockApiService } from './bedrockApiService';
+import { aiRouter } from '../ai/aiProvider';
+
 const ASSESSMENTS_STORAGE_KEY = 'hellodoc_assessments';
 
 type StoredAssessmentRecord = StoredAssessment & {
@@ -23,6 +24,20 @@ const saveStoredAssessments = (assessments: StoredAssessmentRecord[]) => {
 };
 
 const createId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `assessment-${Date.now()}`);
+
+const extractJson = <T>(text: string): T => {
+  const cleaned = text.trim();
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      return JSON.parse(cleaned.slice(start, end + 1)) as T;
+    }
+    throw new Error('Model did not return valid JSON.');
+  }
+};
 
 export const assessmentService = {
   async saveAssessment(data: HealthAssessment): Promise<string> {
@@ -69,11 +84,14 @@ export const assessmentService = {
     }`;
 
     try {
-      const report = await bedrockApiService.completeJson<HealthReport>({
-        systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
-        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
-      });
-      return report as HealthReport;
+      const response = await aiRouter.chat(
+        [{ role: 'user', content: prompt }],
+        {
+          systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+          maxTokens: 2000,
+        }
+      );
+      return extractJson<HealthReport>(response.text);
     } catch (error) {
       console.error("AI Analysis Engine Failure:", error);
       throw new Error("Failed to generate AI clinical report.");
