@@ -1,6 +1,8 @@
 // AWS Bedrock chat provider using Claude model
 // This module handles all Bedrock-specific logic and keeps it isolated from other providers
 
+import { getApiBaseUrl } from '../config/apiConfig';
+
 export interface BedrockMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -36,7 +38,8 @@ export async function chatWithBedrock(
 ): Promise<BedrockResponse> {
   try {
     // Call the backend API endpoint instead of directly calling Bedrock
-    const response = await fetch('/api/ai/message', {
+    const apiUrl = getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/api/ai/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -73,7 +76,8 @@ export async function* streamBedrockChat(
   systemPrompt?: string
 ): AsyncGenerator<string, void, unknown> {
   try {
-    const response = await fetch('/api/ai/message/stream', {
+    const apiUrl = getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/api/ai/message/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
