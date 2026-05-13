@@ -1,0 +1,82 @@
+name: Build & Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Create deployment directory
+        run: mkdir -p deploy
+
+      - name: Copy build artifacts
+        run: |
+          cp -r dist deploy/dist
+          cp -r server deploy/server
+          cp package.json deploy/package.json
+          cp package-lock.json deploy/package-lock.json
+          cp .env.example deploy/.env.example
+
+      - name: Deploy to DigitalOcean server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DIGITALOCEAN_HOST }}
+          username: ${{ secrets.DIGITALOCEAN_USER }}
+          key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
+          port: 22
+          source: "deploy/*"
+          target: "~/HelloDoc_deploy"
+          strip_components: 1
+
+      - name: Run post-deployment script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DIGITALOCEAN_HOST }}
+          username: ${{ secrets.DIGITALOCEAN_USER }}
+          key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/HelloDoc
+            # Backup current version
+            cp -r dist dist.backup
+            cp -r server server.backup
+            
+            # Copy new files from deploy
+            cp -r ~/HelloDoc_deploy/dist .
+            cp -r ~/HelloDoc_deploy/server .
+            cp ~/HelloDoc_deploy/package.json .
+            cp ~/HelloDoc_deploy/package-lock.json .
+            
+            # Install dependencies
+            npm install --production
+            
+            # Kill existing processes and restart
+            pkill -f "bedrock-server" || true
+            sleep 2
+            
+            # Start backend API server in background
+            nohup node server/bedrock-server.mjs > server.log 2>&1 &
+            
+            echo "Deployment complete!"
+            echo "Frontend: dist/"
+            echo "Backend: Started (PID: $!)"
