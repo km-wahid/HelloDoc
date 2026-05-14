@@ -54,6 +54,22 @@ A modern, full-stack React application for AI-powered health assessments, matern
 - **Vaccination Reminders** - TT, Tetanus, and other reminders
 - **Emergency Warnings** - Critical symptom detection
 
+### 🧠 Mental Health & Emotional Well-being Support
+
+- **Emotion-Aware Chat** - Supportive conversations with emotional tone detection
+- **Stress & Anxiety Support** - Evidence-based coping techniques and guidance
+- **Wellness Assessment** - 5-dimension mental wellness scoring:
+  - Mood & emotional state
+  - Anxiety levels
+  - Sleep quality
+  - Stress management
+  - Social connection
+- **Crisis Detection** - Identifies concerning indicators and escalates appropriately
+- **Maternal Mental Health** - Pregnancy-related emotional support
+- **Explainable Guidance** - Clear reasoning behind all recommendations
+- **Privacy-Focused History** - Last 7 days conversation retention
+- **Responsible AI** - Not a replacement for mental health professionals
+
 ### 📚 Records & History
 
 - **Consultation History** - Save and access past consultations
@@ -123,6 +139,37 @@ Backend API Server (/api/ai/message)
 ✅ **Easy Switching** - Change provider by updating one env variable
 ✅ **Type-Safe** - Full TypeScript support throughout
 ✅ **Testable** - Separate test files for each provider
+
+### Mental Health Module Architecture
+
+HelloDoc's mental health module provides **emotion-aware support with responsible AI**:
+
+```
+Chat Interface
+      ↓
+Mental Health Service (mentalHealthService.ts)
+      ├── Emotion Detection
+      ├── Crisis Indicator Analysis
+      ├── Chat Management
+      ├── Assessment Scoring
+      └── localStorage/Backend Sync
+      ↓
+AI Router (aiRouter.ts)
+      └── Warm, Empathetic System Prompts
+      ↓
+Response Processing
+      ├── Emotion Classification
+      ├── Crisis Escalation
+      └── User-Friendly Formatting
+```
+
+**Features:**
+- Emotion-aware conversations with detection
+- 5-dimension wellness assessment (mood, anxiety, sleep, stress, social connection)
+- Crisis detection with appropriate escalation
+- Last 7 days chat history (privacy-focused)
+- Non-diagnostic, supportive approach
+- Integration with maternal health context
 
 ---
 
@@ -429,6 +476,7 @@ HelloDoc/
 │   │   ├── aiService.ts             #    AI chat
 │   │   ├── assessmentService.ts     #    Health assessment
 │   │   ├── maternalService.ts       #    Pregnancy
+│   │   ├── mentalHealthService.ts   #    Mental wellness 🧠
 │   │   ├── authService.ts           #    Authentication
 │   │   ├── recordService.ts         #    Records
 │   │   └── bedrockApiService.ts     #    Legacy API
@@ -442,6 +490,9 @@ HelloDoc/
 │   │   ├── profile/
 │   │   ├── records/
 │   │   └── layout/
+│   │
+│   ├── pages/                       # 📄 Page-level Components
+│   │   └── MentalHealthPage.tsx     #    Mental wellness UI 🧠
 │   │
 │   ├── types.ts                     # 📝 TypeScript Interfaces
 │   ├── App.tsx                      # Main component
