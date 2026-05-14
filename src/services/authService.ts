@@ -1,14 +1,17 @@
 import { UserRole } from '../types';
+import { firebaseAuth } from './firebaseAuth';
 
 export interface UserProfile {
   uid: string;
   email: string;
   name: string;
   role: UserRole;
+  photoUrl?: string;
+  provider?: 'email' | 'google' | 'demo';
 }
 
 type DemoRole = 'patient' | 'doctor';
-type StoredUserProfile = UserProfile & { password: string; createdAt: string; updatedAt: string };
+type StoredUserProfile = UserProfile & { password?: string; createdAt: string; updatedAt: string };
 type AuthStateListener = (user: UserProfile | null) => void;
 
 const USERS_STORAGE_KEY = 'hellodoc_users';
@@ -52,7 +55,9 @@ const stripPassword = (profile: StoredUserProfile): UserProfile => ({
   uid: profile.uid,
   email: profile.email,
   name: profile.name,
-  role: profile.role
+  role: profile.role,
+  photoUrl: profile.photoUrl,
+  provider: profile.provider,
 });
 
 const setCurrentUserId = (uid: string | null) => {
@@ -106,7 +111,40 @@ export const authService = {
   },
 
   async loginWithGoogle() {
-    return this.loginWithDemo('patient');
+    try {
+      const googleUser = await firebaseAuth.signInWithGoogle();
+      const users = getStoredUsers();
+      let profile = users.find((user) => user.email.toLowerCase() === googleUser.email.toLowerCase());
+      
+      // If user doesn't exist, create profile
+      if (!profile) {
+        profile = {
+          uid: googleUser.uid,
+          email: googleUser.email,
+          name: googleUser.name,
+          role: 'patient' as const,
+          photoUrl: googleUser.photoUrl,
+          provider: 'google' as const,
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+        users.push(profile);
+        saveStoredUsers(users);
+      } else {
+        // Update existing profile with Google info
+        profile.photoUrl = googleUser.photoUrl;
+        profile.provider = 'google';
+        profile.updatedAt = nowIso();
+        saveStoredUsers(users);
+      }
+      
+      setCurrentUserId(profile.uid);
+      notifyAuthListeners();
+      return stripPassword(profile);
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
   },
 
   async loginWithDemo(role: DemoRole) {

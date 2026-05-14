@@ -5,7 +5,7 @@
 export function getApiBaseUrl(): string {
   // If running in browser
   if (typeof window !== 'undefined') {
-    const isDev = import.meta.env.DEV;
+    const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV;
     
     // In dev mode, use Vite proxy
     if (isDev) {
