@@ -7,7 +7,8 @@ import {
   Bell, 
   UserCircle,
   LogOut,
-  Globe
+  Globe,
+  BrainCircuit
 } from 'lucide-react';
 import { Screen, Language } from '../../types';
 
@@ -41,6 +42,7 @@ export function Header({ currentScreen, setScreen, onLogout, language, setLangua
           {[
             { id: 'dashboard', label: language === 'BN' ? 'ওভারভিউ' : 'Overview' },
             { id: 'assessment', label: language === 'BN' ? 'মূল্যায়ন' : 'Assessment' },
+            { id: 'mental-health', label: language === 'BN' ? 'মানসিক স্বাস্থ্য' : 'Mental Health' },
             { id: 'search', label: language === 'BN' ? 'পরামর্শক' : 'Consultants' },
             { id: 'history', label: language === 'BN' ? 'রেকর্ড' : 'Records' },
           ].map((item) => (
@@ -109,6 +111,7 @@ export function BottomNav({ currentScreen, setScreen }: HeaderProps) {
   const tabs = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'assessment', label: 'Care', icon: Stethoscope },
+    { id: 'mental-health', label: 'Mental', icon: BrainCircuit },
     { id: 'search', label: 'Search', icon: Search },
     { id: 'history', label: 'Records', icon: History },
   ];

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant' | 'history';
+export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant' | 'history' | 'mental-health';
 
 export type Language = 'EN' | 'BN';
 
@@ -97,4 +97,43 @@ export interface ConsultationRecord {
   doctorName: string;
   notes: string;
   createdAt: string;
+}
+
+export type EmotionLevel = 'calm' | 'anxious' | 'stressed' | 'sad' | 'overwhelmed' | 'hopeful' | 'neutral';
+
+export interface MentalHealthMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  detectedEmotion?: EmotionLevel;
+  crisisIndicators?: string[];
+}
+
+export interface MentalHealthChat {
+  id: string;
+  userId: string;
+  messages: MentalHealthMessage[];
+  createdAt: string;
+  updatedAt: string;
+  summary?: string;
+  emotionalTrend?: EmotionLevel;
+}
+
+export interface MentalHealthAssessment {
+  id: string;
+  userId: string;
+  timestamp: string;
+  score: number; // 0-100
+  wellnessLevel: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Critical';
+  dimensions: {
+    mood: number;
+    anxiety: number;
+    sleep: number;
+    stress: number;
+    socialConnection: number;
+  };
+  recommendations: string[];
+  riskFactors: string[];
+  needsProfessionalHelp: boolean;
 }

@@ -11,6 +11,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { AssessmentForm } from './components/assessment/AssessmentForm';
 import { AssessmentResults } from './components/assessment/AssessmentResults';
 import { MaternalCompanion } from './components/assessment/MaternalCompanion';
+import { MentalHealthPage } from './pages/MentalHealthPage';
 import { AIChat } from './components/assistant/AIChat';
 import { DoctorSearch } from './components/search/DoctorSearch';
 import { DoctorProfile } from './components/search/DoctorProfile';
@@ -256,6 +257,12 @@ export default function App() {
                   onBack={() => navigate('dashboard')}
                   language={language}
                   latestAssessment={latestAssessment}
+                />
+              )}
+
+              {currentScreen === 'mental-health' && (
+                <MentalHealthPage 
+                  onNavigate={navigate}
                 />
               )}
 
