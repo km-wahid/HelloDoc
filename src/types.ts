@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant' | 'history' | 'mental-health';
+export type Screen = 'login' | 'dashboard' | 'assessment' | 'results' | 'search' | 'doctor-profile' | 'consultation' | 'settings' | 'maternal' | 'ai-assistant' | 'history' | 'mental-health' | 'nutrition';
 
 export type Language = 'EN' | 'BN';
 
@@ -136,4 +136,56 @@ export interface MentalHealthAssessment {
   recommendations: string[];
   riskFactors: string[];
   needsProfessionalHelp: boolean;
+}
+
+export type DietType = 'vegetarian' | 'vegan' | 'diabetic' | 'weight-loss' | 'muscle-gain' | 'gluten-free' | 'dairy-free' | 'budget-friendly';
+
+export interface NutritionChat {
+  id: string;
+  userId: string;
+  messages: NutritionMessage[];
+  dietType?: DietType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NutritionMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface MealPlan {
+  id: string;
+  userId: string;
+  dietType: DietType;
+  duration: 'weekly' | 'monthly';
+  meals: {
+    day: string;
+    breakfast: string[];
+    lunch: string[];
+    dinner: string[];
+    snacks: string[];
+  }[];
+  nutritionSummary: {
+    avgCalories: number;
+    avgProtein: number;
+    avgCarbs: number;
+    avgFats: number;
+  };
+  bengaliRecipes: string[];
+  recommendations: string[];
+  createdAt: string;
+}
+
+export interface NutritionAssessment {
+  id: string;
+  userId: string;
+  timestamp: string;
+  dietType: DietType;
+  goals: string[];
+  allergies: string[];
+  preferences: string[];
+  constraints: string[];
 }

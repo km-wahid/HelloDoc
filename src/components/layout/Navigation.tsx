@@ -8,7 +8,8 @@ import {
   UserCircle,
   LogOut,
   Globe,
-  BrainCircuit
+  BrainCircuit,
+  Apple
 } from 'lucide-react';
 import { Screen, Language } from '../../types';
 
@@ -43,6 +44,7 @@ export function Header({ currentScreen, setScreen, onLogout, language, setLangua
             { id: 'dashboard', label: language === 'BN' ? 'ওভারভিউ' : 'Overview' },
             { id: 'assessment', label: language === 'BN' ? 'মূল্যায়ন' : 'Assessment' },
             { id: 'mental-health', label: language === 'BN' ? 'মানসিক স্বাস্থ্য' : 'Mental Health' },
+            { id: 'nutrition', label: language === 'BN' ? 'পুষ্টি' : 'Nutrition' },
             { id: 'search', label: language === 'BN' ? 'পরামর্শক' : 'Consultants' },
             { id: 'history', label: language === 'BN' ? 'রেকর্ড' : 'Records' },
           ].map((item) => (
@@ -111,9 +113,9 @@ export function BottomNav({ currentScreen, setScreen }: HeaderProps) {
   const tabs = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'assessment', label: 'Care', icon: Stethoscope },
+    { id: 'nutrition', label: 'Food', icon: Apple },
     { id: 'mental-health', label: 'Mental', icon: BrainCircuit },
     { id: 'search', label: 'Search', icon: Search },
-    { id: 'history', label: 'Records', icon: History },
   ];
 
   return (
@@ -125,7 +127,7 @@ export function BottomNav({ currentScreen, setScreen }: HeaderProps) {
           <button 
             key={tab.id}
             onClick={() => setScreen(tab.id as Screen)}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 ${
               isActive 
                 ? 'text-primary' 
                 : 'text-on-surface-variant hover:text-on-surface'

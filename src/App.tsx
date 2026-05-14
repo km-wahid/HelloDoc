@@ -12,6 +12,7 @@ import { AssessmentForm } from './components/assessment/AssessmentForm';
 import { AssessmentResults } from './components/assessment/AssessmentResults';
 import { MaternalCompanion } from './components/assessment/MaternalCompanion';
 import { MentalHealthPage } from './pages/MentalHealthPage';
+import { NutritionPage } from './pages/NutritionPage';
 import { AIChat } from './components/assistant/AIChat';
 import { DoctorSearch } from './components/search/DoctorSearch';
 import { DoctorProfile } from './components/search/DoctorProfile';
@@ -262,6 +263,12 @@ export default function App() {
 
               {currentScreen === 'mental-health' && (
                 <MentalHealthPage 
+                  onNavigate={navigate}
+                />
+              )}
+
+              {currentScreen === 'nutrition' && (
+                <NutritionPage 
                   onNavigate={navigate}
                 />
               )}
