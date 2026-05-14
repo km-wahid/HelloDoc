@@ -94,8 +94,15 @@ app.post('/api/ai/message', async (req, res) => {
               })),
               generationConfig: {
                 maxOutputTokens: maxTokens,
-                temperature,
+                temperature: Math.min(Math.max(temperature, 0.1), 1.0), // Clamp temperature 0.1-1.0
+                topP: 0.95,
+                topK: 40,
               },
+              safetySettings: [
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+              ],
             }),
           },
         );

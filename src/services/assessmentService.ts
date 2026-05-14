@@ -87,8 +87,10 @@ export const assessmentService = {
       const response = await aiRouter.chat(
         [{ role: 'user', content: prompt }],
         {
-          systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+          systemPrompt: `You are a medical health assessment AI. Return only valid JSON without markdown code fences or explanations. 
+Be specific, actionable, and user-friendly in descriptions. Use clear language, not medical jargon.`,
           maxTokens: 2000,
+          temperature: 0.3,
         }
       );
       return extractJson<HealthReport>(response.text);

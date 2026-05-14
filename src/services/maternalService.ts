@@ -37,8 +37,11 @@ export const maternalService = {
       const response = await aiRouter.chat(
         [{ role: 'user', content: prompt }],
         {
-          systemPrompt: 'Return only valid JSON. Do not include markdown code fences.',
+          systemPrompt: `You are a pregnancy and maternal health expert. Return only valid JSON without markdown or explanations.
+Write in clear, empathetic language. Guidance should be practical and easy to understand for expectant mothers.
+For Bengali, use natural colloquial language appropriate for healthcare advice.`,
           maxTokens: 1500,
+          temperature: 0.3,
         }
       );
       return extractJson<PregnancyProgress>(response.text);
@@ -75,7 +78,13 @@ export const maternalService = {
     try {
       const response = await aiRouter.chat(
         [{ role: 'user', content: prompt }],
-        { maxTokens: 800 }
+        { 
+          systemPrompt: `You are a caring, knowledgeable pregnancy advisor. Respond with clear, actionable advice.
+Use warm, reassuring tone. For serious concerns, be direct about seeking medical help immediately.
+Avoid medical jargon - use simple language mothers understand.`,
+          maxTokens: 800,
+          temperature: 0.4,
+        }
       );
       return response.text;
     } catch (error) {
